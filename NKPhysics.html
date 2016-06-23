@@ -1,0 +1,160 @@
+<html>
+	<title>NKP ver3.4</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+	<script src="NK.js"></script>
+	<script src="js/vector.js"></script>
+	<script src="js/matrix.js"></script>
+	<script src="js/world.js"></script>
+	<script src="js/material.js"></script>
+	<script src="js/force.js"></script>
+	<script src="js/axis.js"></script>
+	<script src="js/canvas.js"></script>
+	<script src="develop.js"></script>
+	<script>
+		var count = 0;
+		var canvas1, axis1,
+		    canvas2, axis2,
+		    canvas3, axis3,
+			world;
+		var m = new Array(); var L = new Array();
+		var t = 0;
+		
+		function init() {
+			initCanvas();
+			initAxis();
+			initWorld();
+			setInterval('animate()',30);
+		}
+
+		function initCanvas() {
+			var canvasElement1 = document.getElementById('canvas1');
+			canvasElement1.width = canvasElement1.clientWidth;
+			canvasElement1.height = canvasElement1.clientHeight;
+			canvas1 = new NK.Canvas(canvasElement1.getContext('2d'), canvasElement1.width, canvasElement1.height);
+
+			var canvasElement2 = document.getElementById('canvas2');
+			canvasElement2.width = canvasElement2.clientWidth;
+			canvasElement2.height = canvasElement2.clientHeight;
+			canvas2 = new NK.Canvas(canvasElement2.getContext('2d'), canvasElement2.width, canvasElement2.height);
+		}
+		
+		function initAxis() {
+			// axis1
+			axis1 = new NK.Axis();
+			// axis2
+			axis2 = new NK.Axis();
+		}
+
+		function initWorld() {
+			world = new NK.World();
+			var l = 2;
+			for (var i = 0; i <= l; i++) {
+				for (var j = 0; j <= l; j++) {
+					for (var k = 0; k <= l; k++) {
+						var ijk = i * l * l + j * l + k;
+						m[ijk] = new NK.Point();
+//						m[ijk].position.set(500 * i / l - 250, 500 * j / l - 250, 500 * k / l - 250);
+						m[ijk].position.set(500 * Math.random() - 250, 500 * Math.random() - 250, 500 * Math.random() - 250);
+//						m[ijk].velocity.set(0,0,0);
+						m[ijk].velocity.set(1000 * Math.random() - 500, 1000 * Math.random() - 500, 1000 * Math.random() - 500);
+						m[ijk].mass = 10;// * Math.random() ;
+						world.setMaterials(m[ijk]);
+					}
+				}
+			}
+//			var ijk = m.length
+//			m[ijk] = new NK.Point();
+//			m[ijk].position.set(500 * Math.random() - 250, 500 * Math.random() - 250, 500 * Math.random() - 250);
+//			m[ijk].velocity.set(1000 * Math.random() - 500, 1000 * Math.random() - 500, 1000 * Math.random() - 500);
+//			m[ijk].mass = 100;
+//			m[ijk].color = '#f00';
+//			m[ijk].radius = 5;
+//			world.setMaterials(m[ijk]);
+
+			// axis
+			var width = height = length = 500, widthNumber = 4, heightNumber = 4, lengthNumber = 4;
+			var dx = width / widthNumber, dy = height / heightNumber, dz = length / lengthNumber;
+			var widthHelf = width / 2, heightHelf = height / 2, lengthHelf = length / 2;
+
+			for (var j = -heightNumber / 2; j <= heightNumber / 2; j++) {
+				for (var i = -widthNumber / 2; i <= widthNumber / 2; i++ ) {
+					var dxi = dx * i, dzj = dz * j;
+					var length = L.length;
+					L[length] = new NK.Line();
+					L[length].position_1.set( dxi, -heightHelf, dzj);
+					L[length].position_2.set( dxi,  heightHelf, dzj);
+					L[length].width = 1;
+					L[length].color = '#777';
+				}
+			}
+			for (var j = -widthNumber / 2; j <= widthNumber / 2; j++) {
+				for (var i = -heightNumber / 2; i <= heightNumber / 2; i++ ) {
+					var dyi = dy * i, dzj = dz * j;
+					var length = L.length;
+					L[length] = new NK.Line();
+					L[length].position_1.set( -widthHelf, dyi, dzj);
+					L[length].position_2.set(  widthHelf, dyi, dzj);
+					L[length].width = 1;
+					L[length].color = '#777';
+				}
+			}
+			for (var j = -heightNumber / 2; j <= heightNumber / 2; j++) {
+				for (var i = -lengthNumber / 2; i <= lengthNumber / 2; i++ ) {
+					var dxi = dx * i, dyj = dy * j;
+					var length = L.length;
+					L[length] = new NK.Line();
+					L[length].position_1.set( dxi, dyj, -lengthHelf);
+					L[length].position_2.set( dxi, dyj,  lengthHelf);
+					L[length].width = 1;
+					L[length].color = '#777';
+				}
+			}
+			
+			world.planeta();
+		}
+
+		function animate() {
+			console.warn(count);
+			for (var i = 0; i < 3; i++) {
+				world.calculate();
+			}
+			
+			// canvas1
+			t += 0.01;
+			var c = Math.cos(t), s = Math.sin(t);
+			var p = new NK.Vector(3).set(500 * s,500 * c, 100);
+			var ex = new NK.Vector(3).set(0,0,1);
+			var ey = new NK.Vector(3).set(c,-s,0);
+			var o = new NK.Vector(3).set(-1000 * s,-1000 * c,-200);
+			axis1.Axis3D(p,ex,ey,o);
+			// canvs2
+			var p = new NK.Vector(3).set(500 * s,500 * c, -100);
+			var ex = new NK.Vector(3).set(0,0,1);
+			var ey = new NK.Vector(3).set(c,-s,0);
+			var o = new NK.Vector(3).set(-1000 * s,-1000 * c,200);
+			var m = new NK.Matrix(3,3).set(ex.array[0], ey.array[0], p.array[0], ex.array[1], ey.array[1], p.array[1], ex.array[2], ey.array[2], p.array[2]).inverseCopy();
+			axis2.matrix.copy(m);
+			axis2.vector.copy(o);
+
+			render(canvas1, axis1, world);
+			render(canvas2, axis2, world);
+		}
+
+		function render(canvas, axis, world) {
+			// draw canvas
+			canvas.canvas.clearRect( 0, 0, canvas.width, canvas.height);
+	//		canvas.drowAxisLine2D(500, 500, 10, 10);
+
+			// axix
+			for (var i = 0; i < L.length; i++) {
+				L[i].drow(canvas, axis);
+			}
+			world.drow(canvas, axis);
+		}
+
+	</script>
+	<body onLoad="init()">
+		<canvas id="canvas1"></canvas>
+		<canvas id="canvas2"></canvas>
+	</body>
+</html>
